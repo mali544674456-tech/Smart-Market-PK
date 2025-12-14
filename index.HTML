@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Smart Market PK</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+    margin:0;
+    font-family:Arial, sans-serif;
+    background:linear-gradient(to right,#fdfbfb,#ebedee);
+}
+
+/* HEADER */
+header{
+    background:linear-gradient(135deg,#000428,#004e92);
+    color:#fff;
+    padding:30px 15px;
+    text-align:center;
+}
+header h1{
+    margin:0;
+    font-size:40px;
+    letter-spacing:2px;
+}
+header p{
+    margin-top:8px;
+    font-size:16px;
+    opacity:0.9;
+}
+
+/* CONTAINER */
+.container{
+    padding:15px;
+}
+
+/* PRODUCT CARD */
+.product{
+    background:#fff;
+    border-radius:15px;
+    padding:15px;
+    margin-bottom:15px;
+    box-shadow:0 10px 25px rgba(0,0,0,0.1);
+}
+.product img{
+    width:100%;
+    border-radius:10px;
+}
+.product h3{
+    margin:10px 0 5px;
+}
+.product p{
+    font-weight:bold;
+}
+.product button{
+    background:#28a745;
+    color:#fff;
+    border:none;
+    padding:12px;
+    width:100%;
+    border-radius:8px;
+    font-size:16px;
+    cursor:pointer;
+}
+
+/* ADMIN */
+#adminPanel,#loginBox{
+    background:#fff;
+    padding:15px;
+    margin-bottom:20px;
+    border-radius:12px;
+    box-shadow:0 5px 15px rgba(0,0,0,0.1);
+}
+#adminPanel{display:none;}
+
+input, select{
+    width:100%;
+    padding:10px;
+    margin:6px 0;
+}
+
+/* FOOTER */
+footer{
+    background:#111;
+    color:#fff;
+    padding:20px;
+    text-align:center;
+}
+
+/* WHATSAPP */
+.whatsapp{
+    position:fixed;
+    bottom:20px;
+    right:20px;
+    background:#25D366;
+    color:#fff;
+    padding:15px;
+    border-radius:50%;
+    font-size:22px;
+    text-decoration:none;
+}
+
+/* ORDER MODAL */
+#orderModal{
+    display:none;
+    position:fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    background:rgba(0,0,0,0.7);
+    justify-content:center;
+    align-items:center;
+}
+#orderModal .modal-content{
+    background:#fff;
+    padding:20px;
+    border-radius:12px;
+    width:90%;
+    max-width:400px;
+    position:relative;
+}
+#orderModal h3{
+    margin-top:0;
+    text-align:center;
+}
+#orderModal input, #orderModal select{
+    margin-bottom:10px;
+}
+#orderModal button{
+    width:100%;
+    background:#28a745;
+    color:#fff;
+    border:none;
+    padding:10px;
+    font-size:16px;
+    border-radius:8px;
+    cursor:pointer;
+}
+#orderModal .close{
+    position:absolute;
+    top:10px;
+    right:15px;
+    font-size:22px;
+    cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>Smart Market PK</h1>
+    <p>Trusted Online Shopping in Pakistan</p>
+</header>
+
+<div class="container">
+
+<!-- ADMIN LOGIN -->
+<div id="loginBox">
+<h3>Admin Login</h3>
+<input type="email" id="adminEmail" placeholder="Admin Email">
+<input type="password" id="adminPass" placeholder="Password">
+<button onclick="login()">Login</button>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="adminPanel">
+<h3>Add Product</h3>
+<input id="pname" placeholder="Product Name">
+<input id="pprice" placeholder="Price">
+<input type="file" id="pimg">
+<button onclick="addProduct()">Add Product</button>
+<hr>
+</div>
+
+<!-- PRODUCTS -->
+<div id="products"></div>
+
+</div>
+
+<!-- ORDER MODAL -->
+<div id="orderModal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal()">&times;</span>
+    <h3>Place Your Order</h3>
+    <input type="text" id="customerName" placeholder="Your Name">
+    <input type="text" id="customerAddress" placeholder="Address">
+    <input type="text" id="customerPhone" placeholder="Phone Number">
+    <select id="paymentMethod">
+        <option value="">Select Payment Method</option>
+        <option value="JazzCash">JazzCash</option>
+        <option value="Easypaisa">Easypaisa</option>
+        <option value="Cash on Delivery">Cash on Delivery</option>
+    </select>
+    <button onclick="submitOrder()">Submit Order</button>
+  </div>
+</div>
+
+<script>
+const ADMIN_EMAIL = "m.faizan@gmail.com";
+const ADMIN_PASS = "admin123";
+
+let products = JSON.parse(localStorage.getItem("products")) || [];
+const productsDiv = document.getElementById("products");
+
+let selectedProduct = {};
+
+/* LOGIN */
+function login(){
+    let e = adminEmail.value;
+    let p = adminPass.value;
+    if(e===ADMIN_EMAIL && p===ADMIN_PASS){
+        adminPanel.style.display="block";
+        loginBox.style.display="none";
+    }else{
+        alert("Wrong Login Details");
+    }
+}
+
+/* ADD PRODUCT */
+function addProduct(){
+    let name = pname.value;
+    let price = pprice.value;
+    let imgFile = pimg.files[0];
+
+    if(!name || !price || !imgFile){
+        alert("Please fill all fields");
+        return;
+    }
+
+    let reader = new FileReader();
+    reader.onload = function(){
+        products.push({name,price,img:reader.result});
+        localStorage.setItem("products",JSON.stringify(products));
+        showProducts();
+        pname.value="";
+        pprice.value="";
+        pimg.value="";
+    }
+    reader.readAsDataURL(imgFile);
+}
+
+/* SHOW PRODUCTS */
+function showProducts(){
+    productsDiv.innerHTML="";
+    products.forEach(p=>{
+        productsDiv.innerHTML+=`
+        <div class="product">
+            <img src="${p.img}">
+            <h3>${p.name}</h3>
+            <p>Price: ${p.price}</p>
+            <button onclick='openModal("${p.name}","${p.price}")'>Buy Now</button>
+        </div>`;
+    });
+}
+
+/* OPEN MODAL */
+function openModal(name,price){
+    selectedProduct = {name,price};
+    document.getElementById("orderModal").style.display="flex";
+}
+
+/* CLOSE MODAL */
+function closeModal(){
+    document.getElementById("orderModal").style.display="none";
+    document.getElementById("customerName").value="";
+    document.getElementById("customerAddress").value="";
+    document.getElementById("customerPhone").value="";
+    document.getElementById("paymentMethod").value="";
+}
+
+/* SUBMIT ORDER */
+function submitOrder(){
+    let n = document.getElementById("customerName").value;
+    let a = document.getElementById("customerAddress").value;
+    let ph = document.getElementById("customerPhone").value;
+    let pm = document.getElementById("paymentMethod").value;
+
+    if(!n || !a || !ph || !pm){
+        alert("Please fill all fields");
+        return;
+    }
+
+    // Open email client with pre-filled order details
+    const mailtoLink = 
+    `mailto:m.faizan7857@gmail.com?subject=New Order&body=` +
+    `Product: ${selectedProduct.name}%0A` +
+    `Price: ${selectedProduct.price}%0A` +
+    `Name: ${n}%0A` +
+    `Address: ${a}%0A` +
+    `Phone: ${ph}%0A` +
+    `Payment Method: ${pm}`;
+
+    window.location.href = mailtoLink;
+    alert("Order details opened in your email client! Please send to complete order.");
+    closeModal();
+}
+
+showProducts();
+</script>
+
+<footer>
+<p>Email: m.faizan7857@gmail.com</p>
+<p>JazzCash: 03054860106</p>
+<p>Easypaisa: 03435860106</p>
+<p>WhatsApp: 03435860106</p>
+<p>© 2025 Smart Market PK</p>
+</footer>
+
+<a class="whatsapp" href="https://wa.me/923435860106">💬</a>
+
+</body>
+</html>
